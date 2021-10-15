@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Notebook</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="tab_text_1">Notes</string>
+    <string name="tab_text_2">Books</string>
+    <string name="title_activity_edit">EditActivity</string>
+    <string name="title_activity_book">BookActivity</string>
+</resources>
