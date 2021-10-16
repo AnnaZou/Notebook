@@ -3,13 +3,19 @@ package com.annazou.notebook;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.annazou.notebook.ui.main.BookListFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -36,11 +42,16 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
+
         mBook = getIntent().getStringExtra(INTENT_BOOK) + "";
 
         mBookDir = Utils.getBookDir(BookActivity.this, mBook);
+        Log.e("mytest","dir = " + mBookDir.getAbsolutePath());
         if(!mBookDir.exists()){
-            mBookDir.mkdir();
+            mBookDir.mkdirs();
         }
 
         FloatingActionButton fab = findViewById(R.id.add_chapter);
@@ -55,11 +66,51 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         });
 
+        mList = findViewById(R.id.chapter_list);
         mAdapter = new ChapterAdapter();
         mList.setAdapter(mAdapter);
         mList.setOnItemClickListener(this);
         mList.setOnItemLongClickListener(this);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.book_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean locked = VerifyUtils.isBookLocked(this, mBook);
+        menu.findItem(R.id.lock).setTitle(locked? "Unlock" : "Lock");
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if(item.getItemId() == R.id.lock){
+            boolean locked = VerifyUtils.isBookLocked(this, mBook);
+            if(locked){
+                VerifyUtils.VerifyCallback callback = new VerifyUtils.VerifyCallback() {
+                    @Override
+                    public void onVerifyResult(boolean successed, String book) {
+                        VerifyUtils.removeBookPassword(BookActivity.this, mBook);
+                    }
+                };
+                VerifyUtils.showVerifyDialog(BookActivity.this, mBook, callback);
+            } else{
+                VerifyUtils.showSetPasswordDialog(BookActivity.this, mBook);
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -80,6 +131,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
 
         @Override
         public int getCount() {
+            Log.e("mytest","exist = " + mBookDir.exists());
             return mBookDir.list().length;
         }
 

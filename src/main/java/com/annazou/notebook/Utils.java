@@ -1,6 +1,7 @@
 package com.annazou.notebook;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.File;
@@ -86,12 +87,11 @@ public class Utils {
         return result;
     }
 
-    public static String getChapterThumbTitle(Context context, String book, int chapter){
-        String path = getChapterFilePath(context, book,chapter);
+    public static String getFileThumbTitle(String filePath){
         StringBuilder sb = new StringBuilder("");
         try {
-            FileInputStream inputStream = new FileInputStream(path);
-            byte[] buffer = new byte[100];
+            FileInputStream inputStream = new FileInputStream(filePath);
+            byte[] buffer = new byte[64];
             int len = inputStream.read(buffer);
             sb.append(new String(buffer,0,len));
             inputStream.close();
@@ -103,6 +103,11 @@ public class Utils {
         return title[0];
     }
 
+    public static String getChapterThumbTitle(Context context, String book, int chapter){
+        String path = getChapterFilePath(context, book,chapter);
+        return getFileThumbTitle(path);
+    }
+
     public static String getFileDate(File file){
         String date = "--/--/--";
         if(file.exists()){
@@ -111,4 +116,5 @@ public class Utils {
         }
         return date;
     }
+
 }

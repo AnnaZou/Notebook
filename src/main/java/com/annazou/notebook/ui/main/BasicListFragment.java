@@ -23,7 +23,7 @@ public class BasicListFragment extends Fragment {
 
     protected PageViewModel pageViewModel;
 
-    public static BasicListFragment newInstance(int index) {
+    protected static BasicListFragment newInstance(int index) {
         BasicListFragment fragment = new BasicListFragment();
         Bundle bundle = new Bundle();
         bundle.putInt(ARG_SECTION_NUMBER, index);

@@ -2,6 +2,7 @@ package com.annazou.notebook.ui.main;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,12 +26,17 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
     NoteListAdapter mAdapter;
     String[] mNoteList;
 
+    protected static NoteListFragment newInstance(int index) {
+        NoteListFragment fragment = new NoteListFragment();
+        return fragment;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         File notes = new File(Utils.getNoteDirPath(getActivity()));
         if(!notes.exists()){
-            notes.mkdir();
+            notes.mkdirs();
         }
         mNoteList = notes.list();
     }
@@ -51,6 +57,8 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent intent = new Intent(getActivity(), EditActivity.class);
+        Log.e("mytest","onItemClick = " + mNoteList[position]);
+
         intent.putExtra(EditActivity.INTENT_NOTE, mNoteList[position]);
         startActivity(intent);
     }
@@ -88,7 +96,7 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
                 convertView.setTag(holder);
             }
             ViewHolder holder = (ViewHolder) convertView.getTag();
-            holder.title.setText(mNoteList[position]);
+            holder.title.setText(Utils.getFileThumbTitle(Utils.getNoteDirPath(getActivity()) + "/" + mNoteList[position]));
             holder.date.setText(Utils.getFileDate(new File(Utils.getNoteDirPath(getActivity())) ));
 
             return convertView;

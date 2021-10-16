@@ -8,13 +8,15 @@
         android:id="@+id/note_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="24sp"/>
+        android:textSize="20sp"
+        android:ellipsize="end"
+        android:maxLines="1"/>
     <TextView
         android:id="@+id/note_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:textColor="#9000"/>
 
 </LinearLayout>

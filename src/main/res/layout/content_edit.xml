@@ -8,4 +8,11 @@
     tools:context=".EditActivity"
     tools:showIn="@layout/activity_edit">
 
+    <EditText
+        android:id="@+id/edit"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textSize="20sp"
+        android:gravity="top"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

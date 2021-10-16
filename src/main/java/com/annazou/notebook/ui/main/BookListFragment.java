@@ -2,6 +2,7 @@ package com.annazou.notebook.ui.main;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,23 +16,30 @@ import androidx.annotation.NonNull;
 import com.annazou.notebook.BookActivity;
 import com.annazou.notebook.R;
 import com.annazou.notebook.Utils;
+import com.annazou.notebook.VerifyUtils;
 
 import java.io.File;
 
-public class BookListFragment extends BasicListFragment implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
-
+public class BookListFragment extends BasicListFragment implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, VerifyUtils.VerifyCallback {
     ListView mList;
     BookListAdapter mAdapter;
     String[] mBookList;
+
+    protected static BookListFragment newInstance(int index) {
+        BookListFragment fragment = new BookListFragment();
+        return fragment;
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         File books = new File(Utils.getBookDirPath(getActivity()));
         if(!books.exists()){
-            books.mkdir();
+            books.mkdirs();
         }
         mBookList = books.list();
+        Log.e("mytest","books = " + mBookList.length);
     }
 
     @Override
@@ -49,15 +57,27 @@ public class BookListFragment extends BasicListFragment implements AdapterView.O
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Intent intent = new Intent(getActivity(), BookActivity.class);
-        intent.putExtra(BookActivity.INTENT_BOOK, mBookList[position]);
-        startActivity(intent);
+        String book = mBookList[position];
+        if(VerifyUtils.isBookLocked(getActivity(), book)) {
+            VerifyUtils.showVerifyDialog(getActivity(), book, this);
+        } else {
+            Intent intent = new Intent(getActivity(), BookActivity.class);
+            intent.putExtra(BookActivity.INTENT_BOOK, book);
+            startActivity(intent);
+        }
     }
 
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         //delete, star
         return false;
+    }
+
+    @Override
+    public void onVerifyResult(boolean successed, String book) {
+        Intent intent = new Intent(getActivity(), BookActivity.class);
+        intent.putExtra(BookActivity.INTENT_BOOK, book);
+        startActivity(intent);
     }
 
     class BookListAdapter extends BaseAdapter{

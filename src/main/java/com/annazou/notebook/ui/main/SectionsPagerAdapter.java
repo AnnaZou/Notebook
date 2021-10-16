@@ -1,6 +1,7 @@
 package com.annazou.notebook.ui.main;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
@@ -29,6 +30,9 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         // getItem is called to instantiate the fragment for the given page.
         // Return a PlaceholderFragment (defined as a static inner class below).
+        Log.e("mytest","position = " + position);
+        if(position == 0) return NoteListFragment.newInstance(position + 1);
+        if(position == 1) return BookListFragment.newInstance(position + 1);
         return BasicListFragment.newInstance(position + 1);
     }
 
