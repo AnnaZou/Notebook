@@ -17,26 +17,33 @@ public class Utils {
 
     private static final SimpleDateFormat SDF = new SimpleDateFormat("yy/MM/dd");
 
+    public static String getNoteDirPath(Context context){
+        return context.getFilesDir().getAbsolutePath() + "/" + DIR_NOTE;
+    }
+
+    public static String getBookDirPath(Context context){
+        return context.getFilesDir().getAbsolutePath() + "/" + DIR_BOOK;
+    }
+
+    public static File getBookDir(Context context, String name){
+        File dir = new File(getBookDirPath(context) + "/" + name);
+        return dir;
+    }
 
     public static int getNotesCount(Context context){
-        File dir = new File(context.getFilesDir().getAbsolutePath() + "/" + DIR_NOTE);
+        File dir = new File(getNoteDirPath(context));
         if(dir.exists()){
             return dir.list().length;
         }
         return 0;
     }
 
-    public static File getBookDir(Context context, String name){
-        File dir = new File(context.getFilesDir().getAbsolutePath() + "/" + DIR_BOOK + "/" + name);
-        return dir;
-    }
-
     public static String getChapterFilePath(Context context, String book, int chapter){
-        return context.getFilesDir().getAbsolutePath() + "/" + DIR_BOOK + "/" + book + "/" + chapter;
+        return getBookDirPath(context) + "/" + book + "/" + chapter;
     }
 
     public static boolean checkBookNameExists(Context context, String name){
-        File dir = new File(context.getFilesDir().getAbsolutePath() + "/" + DIR_BOOK);
+        File dir = new File(getBookDirPath(context));
         if(dir.exists()){
             String[] files = dir.list();
             for(String file : files){

@@ -64,6 +64,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        //delete, star
         return false;
     }
 
