@@ -8,11 +8,27 @@
     tools:context=".EditActivity"
     tools:showIn="@layout/activity_edit">
 
+    <View
+        android:id="@+id/edit_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#EEE"
+        />
+
+    <View
+        android:id="@+id/edit_bg_dark_cover"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E000"
+        android:visibility="gone"
+        />
+
     <EditText
         android:id="@+id/edit"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:textSize="20sp"
-        android:gravity="top"/>
+        android:textSize="@dimen/font_size_normal"
+        android:gravity="top"
+        android:background="#0000"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

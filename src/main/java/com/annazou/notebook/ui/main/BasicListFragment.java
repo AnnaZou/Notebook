@@ -22,6 +22,7 @@ public class BasicListFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     protected PageViewModel pageViewModel;
+    protected boolean mIsArranging;
 
     protected static BasicListFragment newInstance(int index) {
         BasicListFragment fragment = new BasicListFragment();
@@ -41,5 +42,33 @@ public class BasicListFragment extends Fragment {
         }
         pageViewModel.setIndex(index);
     }
+
+    private ArrangeHost mArrangeHost;
+
+    public interface ArrangeHost{
+        void enterArrangeMode();
+        void exitArrangeMode(boolean saveChange);
+    }
+
+    public void setArrangeHost(ArrangeHost host){
+        mArrangeHost = host;
+    }
+
+    public ArrangeHost getArrangeHost(){
+        return mArrangeHost;
+    }
+
+    public void enterArrangeMode(){
+        mIsArranging = true;
+    }
+
+    public void exitArrangeMode(boolean saveChange){
+        mIsArranging = false;
+    }
+
+    public boolean isInArrangeMode(){
+        return mIsArranging;
+    }
+
 
 }

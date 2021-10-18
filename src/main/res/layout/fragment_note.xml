@@ -6,6 +6,7 @@
         android:id="@+id/note_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_weight="1.0"
         android:divider="#999"
         android:dividerHeight="1px">
     </ListView>

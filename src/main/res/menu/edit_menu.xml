@@ -2,10 +2,36 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/color_mode"
-        android:title="Day mode"
-        app:showAsAction="ifRoom"/>
+        android:title="Color mode"
+        app:showAsAction="never">
+        <menu>
+            <group android:id="@+id/color_mode_group"
+                android:checkableBehavior="single">
+                <item android:id="@+id/day_mode"
+                    android:title="Day mode"/>
+                <item android:id="@+id/dark_mode"
+                    android:title="Dark mode"/>
+            </group>
+        </menu>
+    </item>
     <item android:id="@+id/clear"
         android:title="Clear"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="never"/>
+    <item android:id="@+id/font_size"
+        android:title="Font size"
+        app:showAsAction="never">
+        <menu>
+            <group android:id="@+id/font_size_group"
+                android:checkableBehavior="single">
+                <item android:id="@+id/font_size_small"
+                    android:title="Small"/>
+                <item android:id="@+id/font_size_normal"
+                    android:title="Normal"/>
+                <item android:id="@+id/font_size_large"
+                    android:title="Large"/>
+            </group>
+
+        </menu>
+    </item>
 
 </menu>

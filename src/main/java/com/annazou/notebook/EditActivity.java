@@ -17,6 +17,9 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -100,7 +103,6 @@ public class EditActivity extends AppCompatActivity {
         mNote = getIntent().getStringExtra(INTENT_NOTE );
 
         if(mNote != null && !mNote.isEmpty()){
-            Log.e("mytest","mNote = " + mNote);
             mFilePath = Utils.getNoteDirPath(this) + "/" + mNote;
             actionBar.setTitle("Note");
         }
@@ -123,7 +125,9 @@ public class EditActivity extends AppCompatActivity {
         });
 
         mEditText = findViewById(R.id.edit);
-        Log.e("mytest","filepath = " + mFilePath);
+        refreshFontSize(SettingUtils.getFontSize(this));
+        refreshColorMode(SettingUtils.isDarkMode(this));
+
         File file = new File(mFilePath);
         if(!file.exists()){
             mEditText.addTextChangedListener(mTextWatch);
@@ -133,13 +137,93 @@ public class EditActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.edit_menu, menu);
+        MenuItem colorItem = menu.findItem(R.id.color_mode);
+        colorItem.getSubMenu().clearHeader();
+        MenuItem fontItem = menu.findItem(R.id.font_size);
+        fontItem.getSubMenu().clearHeader();
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean isDark = SettingUtils.isDarkMode(this);
+        Log.e("mytest","isDark = " + isDark);
+        if(isDark){
+            menu.findItem(R.id.dark_mode).setChecked(true);
+        } else {
+            menu.findItem(R.id.day_mode).setChecked(true);
+        }
+
+        int fontSize = SettingUtils.getFontSize(this);
+        Log.e("mytest","fontSize = " + fontSize);
+        if(fontSize == 1) {
+            menu.findItem(R.id.font_size_small).setChecked(true);
+        } else if(fontSize == 2) {
+            menu.findItem(R.id.font_size_large).setChecked(true);
+        } else {
+            menu.findItem(R.id.font_size_normal).setChecked(true);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case android.R.id.home:
                 onBackPressed();
                 break;
+            case R.id.clear:
+                mEditText.setText("");
+                break;
+            case R.id.font_size_normal:
+                setFontSize(0);
+                break;
+            case R.id.font_size_small:
+                setFontSize(1);
+                break;
+            case R.id.font_size_large:
+                setFontSize(2);
+                break;
+            case R.id.day_mode:
+                setColorMode(false);
+                break;
+            case R.id.dark_mode:
+                setColorMode(true);
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setFontSize(int size){
+        int fontSize = SettingUtils.getFontSize(this);
+        if(fontSize != size){
+            SettingUtils.setFontSize(this, size);
+            refreshFontSize(size);
+        }
+    }
+
+    private void refreshFontSize(int size){
+        mEditText.setTextSize(TypedValue.COMPLEX_UNIT_PX, size == 1 ? getResources().getDimensionPixelSize(R.dimen.font_size_small)
+                : size == 2 ? getResources().getDimension(R.dimen.font_size_large)
+                : getResources().getDimension(R.dimen.font_size_normal));
+    }
+
+    private void setColorMode(boolean isDark){
+        boolean dark = SettingUtils.isDarkMode(this);
+        if(isDark != dark){
+            SettingUtils.setColorMode(this, isDark);
+            refreshColorMode(isDark);
+        }
+    }
+
+    private void refreshColorMode(boolean isDark){
+        mEditText.setTextColor(getColor(isDark ? R.color.dark_mode_text_color : R.color.day_mode_text_color));
+        View cover = findViewById(R.id.edit_bg_dark_cover);
+        cover.setVisibility(isDark ? View.VISIBLE : View.GONE);
     }
 
     @Override

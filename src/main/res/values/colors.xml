@@ -3,4 +3,9 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="day_mode_text_color">#111</color>
+    <color name="dark_mode_text_color">#EEE</color>
+    <color name="arrange_mode_delete_bg">#999</color>
+    <color name="note_item_bg">#FFF</color>
 </resources>

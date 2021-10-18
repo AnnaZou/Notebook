@@ -1,7 +1,6 @@
 package com.annazou.notebook;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.File;
@@ -31,12 +30,10 @@ public class Utils {
         return dir;
     }
 
-    public static int getNotesCount(Context context){
-        File dir = new File(getNoteDirPath(context));
-        if(dir.exists()){
-            return dir.list().length;
-        }
-        return 0;
+    public static String getNewNoteName(){
+        Date date = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddhhmmss");
+        return format.format(date);
     }
 
     public static String getChapterFilePath(Context context, String book, int chapter){

@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.annazou.notebook.ui.main.BasicListFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
@@ -27,8 +28,9 @@ import android.widget.TextView;
 
 import com.annazou.notebook.ui.main.SectionsPagerAdapter;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements BasicListFragment.ArrangeHost {
 
+    SectionsPagerAdapter mPagerAdapter;
     FloatingActionButton mFab;
     boolean mIsArrangeMode;
 
@@ -40,9 +42,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
+        mPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
+        mPagerAdapter.setArrangeHost(this);
         ViewPager viewPager = findViewById(R.id.view_pager);
-        viewPager.setAdapter(sectionsPagerAdapter);
+        viewPager.setAdapter(mPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
         mFab = findViewById(R.id.fab);
@@ -56,8 +59,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         if(which == 0){
                             Intent intent = new Intent(MainActivity.this, EditActivity.class);
-                            int notes = Utils.getNotesCount(MainActivity.this);
-                            intent.putExtra(EditActivity.INTENT_NOTE,notes + 1);
+                            intent.putExtra(EditActivity.INTENT_NOTE,Utils.getNewNoteName());
                             startActivity(intent);
                         }else if (which == 1){
                             showAddBookDialog();
@@ -140,27 +142,48 @@ public class MainActivity extends AppCompatActivity {
         }).show();
     }
 
-    private void enterArrangeMode(){
+    public void enterArrangeMode(){
         mIsArrangeMode = true;
         mFab.hide();
         ActionBar actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
+        mPagerAdapter.enterArrangeMode();
 
     }
 
-    private void exitArrangeMode(){
+    public void exitArrangeMode(boolean saveChange){
         mIsArrangeMode = false;
         mFab.show();
         ActionBar actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(false);
+        mPagerAdapter.exitArrangeMode(false);
+    }
+
+    private void showSaveChangeDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Save change?").setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                exitArrangeMode(true);
+            }
+        }).setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        }).setNegativeButton("Don't save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                exitArrangeMode(false);
+            }
+        }).show();
     }
 
     @Override
     public void onBackPressed() {
         if(mIsArrangeMode){
-            exitArrangeMode();
+            showSaveChangeDialog();
         } else {
             super.onBackPressed();
         }
