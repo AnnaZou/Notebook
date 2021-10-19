@@ -21,10 +21,6 @@ public class NoteDatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public NoteDatabaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, name, factory, version);
-    }
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" +
@@ -77,7 +73,7 @@ public class NoteDatabaseHelper extends SQLiteOpenHelper {
 
     public void setTopOrder(String fileName, int order){
         ContentValues cv = new ContentValues();
-        cv.put(COLUMN_STAR, order);
+        cv.put(COLUMN_ORDER, order);
         getWritableDatabase().update(TABLE_NAME, cv, COLUMN_NAME + "=?", new String[]{fileName});
     }
 }

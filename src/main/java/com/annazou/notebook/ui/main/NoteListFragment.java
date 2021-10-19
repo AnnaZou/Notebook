@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
 
     List<NoteItem> mDeleteList;
     int mTopCount;
+    TextView mEmptyView;
 
     protected static NoteListFragment newInstance(int index) {
         NoteListFragment fragment = new NoteListFragment();
@@ -43,7 +45,8 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        refreshNoteItemList();
+        mNoteItems = new ArrayList<>();
+        mDatabase = new NoteDatabaseHelper(getActivity());
     }
 
     @Override
@@ -56,7 +59,19 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
         mList.setAdapter(mAdapter);
         mList.setOnItemLongClickListener(this);
         mList.setOnItemClickListener(this);
+        mEmptyView = root.findViewById(R.id.note_list_empty_view);
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!isInArrangeMode()){
+            refreshNoteItemList();
+        }
+        mAdapter.notifyDataSetChanged();
+        mList.setVisibility(mAdapter.getCount() > 0 ? View.VISIBLE : View.GONE);
+        mEmptyView.setVisibility(mAdapter.getCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -90,11 +105,12 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
     public void exitArrangeMode(boolean saveChange) {
         super.exitArrangeMode(saveChange);
         if(saveChange){
+            Log.e("mytest","mNoteItems = " + mNoteItems.size() + " mArrangeList = " + mArrangeList.size() + " mDeleteList = " + mDeleteList.size());
             for(NoteItem deleteItem : mDeleteList){
                 mDatabase.deleteNote(deleteItem.name);
+                Utils.deleteFile(Utils.getNoteDirPath(getActivity()) + "/" + deleteItem.name);
                 mArrangeList.remove(deleteItem);
             }
-            mNoteItems.clear();
             mTopCount = 0;
             for (int i = 0; i < mArrangeList.size(); i++){
                 NoteItem item = mArrangeList.get(i);
@@ -108,8 +124,7 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
                 mDatabase.setStar(item.name, item.star);
             }
         }
-        mArrangeList = new ArrayList<>();
-        mDeleteList.clear();
+        refreshNoteItemList();
         mAdapter.notifyDataSetChanged();
     }
 
@@ -119,7 +134,7 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
             notes.mkdirs();
         }
         String[] fileList = notes.list();
-        mDatabase = new NoteDatabaseHelper(getActivity());
+        Log.e("mytest","fileList = " + fileList.length);
         mNoteItems = new ArrayList<>();
         List<NoteItem> tops = new ArrayList<>();
         for(String note : fileList){
@@ -142,6 +157,7 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
             mNoteItems.add(item.topOrder - 1, item);
         }
         mDeleteList = new ArrayList<>();
+        mArrangeList = new ArrayList<>();
     }
 
     @Override
@@ -209,16 +225,19 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
                 holder.arrangeItems = convertView.findViewById(R.id.arrange_items);
                 holder.background = convertView.findViewById(R.id.note_item_bg);
                 holder.star = convertView.findViewById(R.id.star);
+                holder.top = convertView.findViewById(R.id.note_top_indicator);
                 convertView.setTag(holder);
             }
             ViewHolder holder = (ViewHolder) convertView.getTag();
             NoteItem item = isInArrangeMode() ? mArrangeList.get(position) : mNoteItems.get(position);
+            Log.e("mytest","item = " + item);
             holder.title.setText(Utils.getFileThumbTitle(Utils.getNoteDirPath(getActivity()) + "/" + item.name));
             holder.date.setText(Utils.getFileDate(new File(Utils.getNoteDirPath(getActivity()) + "/" + item.name)));
-            holder.background.setBackgroundColor(getActivity().getColor(mDeleteList.contains(item.name) ?
+            holder.background.setBackgroundColor(getActivity().getColor(mDeleteList.contains(item) ?
                     R.color.arrange_mode_delete_bg : R.color.note_item_bg));
             holder.star.setVisibility(isInArrangeMode() ? View.GONE : item.star ? View.VISIBLE : View.GONE);
             holder.arrangeItems.setVisibility(isInArrangeMode() ? View.VISIBLE : View.GONE);
+            holder.top.setVisibility(item.topOrder > 0 ? View.VISIBLE : View.GONE);
             if(isInArrangeMode()){
                 ImageButton star = holder.arrangeItems.findViewById(R.id.arrange_star);
                 star.setTag(position);
@@ -244,6 +263,7 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
         LinearLayout arrangeItems;
         View background;
         ImageButton star;
+        ImageView top;
     }
 
     class NoteItem{
@@ -254,6 +274,11 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
         @Override
         public boolean equals(Object obj) {
             return obj instanceof NoteItem ? ((NoteItem) obj).name.equals(name) : false;
+        }
+
+        @Override
+        public String toString() {
+            return "name=" + name + " star=" + star + " topOrder=" + topOrder;
         }
     }
 }

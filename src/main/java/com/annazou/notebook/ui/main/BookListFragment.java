@@ -38,8 +38,8 @@ public class BookListFragment extends BasicListFragment implements AdapterView.O
         if(!books.exists()){
             books.mkdirs();
         }
-        mBookList = books.list();
-        Log.e("mytest","books = " + mBookList.length);
+        mBookList = new String[0];
+
     }
 
     @Override
@@ -48,11 +48,23 @@ public class BookListFragment extends BasicListFragment implements AdapterView.O
             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_book, container, false);
         mList = root.findViewById(R.id.book_list);
+        TextView emptyView = new TextView(getActivity());
+        emptyView.setText("Empty");
+        mList.setEmptyView(emptyView);
         mAdapter = new BookListAdapter();
         mList.setAdapter(mAdapter);
         mList.setOnItemLongClickListener(this);
         mList.setOnItemClickListener(this);
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.e("mytest", "onResume Booklist");
+        File books = new File(Utils.getBookDirPath(getActivity()));
+        mBookList = books.list();
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -75,9 +87,11 @@ public class BookListFragment extends BasicListFragment implements AdapterView.O
 
     @Override
     public void onVerifyResult(boolean successed, String book) {
-        Intent intent = new Intent(getActivity(), BookActivity.class);
-        intent.putExtra(BookActivity.INTENT_BOOK, book);
-        startActivity(intent);
+        if(successed) {
+            Intent intent = new Intent(getActivity(), BookActivity.class);
+            intent.putExtra(BookActivity.INTENT_BOOK, book);
+            startActivity(intent);
+        }
     }
 
     class BookListAdapter extends BaseAdapter{

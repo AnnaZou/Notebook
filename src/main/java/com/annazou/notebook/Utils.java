@@ -84,6 +84,18 @@ public class Utils {
         return result;
     }
 
+    public static void deleteFile(String path){
+        File file = new File(path);
+        if (file.exists()) file.delete();
+    }
+
+    public static void renameFile(String dir,String oldName, String newName){
+        File file = new File(dir + "/" + oldName);
+        if (file.exists()){
+            file.renameTo(new File(dir + "/" + newName));
+        }
+    }
+
     public static String getFileThumbTitle(String filePath){
         StringBuilder sb = new StringBuilder("");
         try {

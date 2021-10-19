@@ -10,6 +10,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -83,17 +84,16 @@ public class VerifyUtils {
 
             }
         });
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Set password of " + book)
                 .setView(addView)
-                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        return;
-                    }
-                }).setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                .setCancelable(false);
+        final AlertDialog dialog = builder.create();
+        Button positive = addView.findViewById(R.id.pwd_dialog_positive);
+        positive.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
+            public void onClick(View v) {
                 String pwd1 = password1.getText().toString();
                 String pwd2 = password2.getText().toString();
                 if (pwd1.isEmpty()) {
@@ -108,7 +108,15 @@ public class VerifyUtils {
                 setBookPassword(context, book, pwd1);
                 dialog.dismiss();
             }
-        }).setCancelable(false).show();
+        });
+
+        Button negative = addView.findViewById(R.id.pwd_dialog_negative);
+        negative.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
     }
 
     public interface VerifyCallback {
@@ -116,50 +124,37 @@ public class VerifyUtils {
     }
 
     public static void showVerifyDialog(final Context context, final String book, final VerifyCallback callback){
-        final View addView = LayoutInflater.from(context).inflate(R.layout.dialog_verify, null);
-        final EditText password = (EditText) addView.findViewById(R.id.password);
-        final TextView tip = (TextView) addView.findViewById(R.id.verify_tip);
-
-        password.addTextChangedListener(new TextWatcher() {
+        final InputDialog verifyDialog = new InputDialog(context, "Password of " + book);
+        InputDialog.Callbacks dialogCallbacks = new InputDialog.Callbacks() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
+            public void onInputChanged(InputDialog dialog, CharSequence s) {
+                dialog.setWarnText("");
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                tip.setText("");
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Password of " + book)
-                .setView(addView)
-                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        return;
-                    }
-                }).setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String pwd = password.getText().toString();
+            public void onPositiveClicked(InputDialog dialog) {
+                String pwd = dialog.getInputText();
                 if (pwd.isEmpty()) {
-                    tip.setText("Password can't be empty.");
+                    dialog.setWarnText("Password can't be empty.");
                     return;
                 }
                 if (!verifyBookPassword(context, book, pwd)) {
-                    tip.setText("Wrong password");
+                    dialog.setWarnText("Wrong password");
                     return;
                 }
                 callback.onVerifyResult(true, book);
-                dialog.dismiss();
+                dialog.getDialog().dismiss();
             }
-        }).show();
+
+            @Override
+            public void onNegativeClicked(InputDialog dialog) {
+                callback.onVerifyResult(false, book);
+                dialog.getDialog().dismiss();
+            }
+        };
+
+        verifyDialog.setCallback(dialogCallbacks);
+        verifyDialog.getDialog().show();
+
     }
 }

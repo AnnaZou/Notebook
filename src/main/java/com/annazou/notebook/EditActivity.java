@@ -66,6 +66,13 @@ public class EditActivity extends AppCompatActivity {
         public void handleMessage(@NonNull Message msg) {
             switch (msg.what){
                 case MSG_SAVE:
+                    File file = new File(mFilePath);
+                    if(!file.exists()) {
+                        if(mNote != null && !mNote.isEmpty()) {
+                            NoteDatabaseHelper database = new NoteDatabaseHelper(EditActivity.this);
+                            database.addNote(mNote);
+                        }
+                    }
                     Utils.writeFile(mFilePath, mEditText.getText().toString());
                     mChanged = false;
                     Toast.makeText(EditActivity.this, "Saved", Toast.LENGTH_SHORT);
@@ -149,7 +156,6 @@ public class EditActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         boolean isDark = SettingUtils.isDarkMode(this);
-        Log.e("mytest","isDark = " + isDark);
         if(isDark){
             menu.findItem(R.id.dark_mode).setChecked(true);
         } else {
@@ -157,7 +163,6 @@ public class EditActivity extends AppCompatActivity {
         }
 
         int fontSize = SettingUtils.getFontSize(this);
-        Log.e("mytest","fontSize = " + fontSize);
         if(fontSize == 1) {
             menu.findItem(R.id.font_size_small).setChecked(true);
         } else if(fontSize == 2) {

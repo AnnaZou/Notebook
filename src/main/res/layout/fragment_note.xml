@@ -10,4 +10,14 @@
         android:divider="#999"
         android:dividerHeight="1px">
     </ListView>
+
+    <TextView
+        android:id="@+id/note_list_empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Empty"
+        android:textSize="30sp"
+        android:gravity="center"
+        android:visibility="gone"/>
+
 </LinearLayout>

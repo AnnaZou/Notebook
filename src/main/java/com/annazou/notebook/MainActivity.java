@@ -92,54 +92,38 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
     }
 
     private void showAddBookDialog(){
-        final View addView = LayoutInflater.from(this).inflate(R.layout.add_book_dialog, null);
-        final EditText newNameView = (EditText) addView.findViewById(R.id.add_book_text);
-        final TextView tip = (TextView) addView.findViewById(R.id.add_book_tip);
-
-        newNameView.addTextChangedListener(new TextWatcher() {
+        final InputDialog addDialog = new InputDialog(this, "Add new book");
+        InputDialog.Callbacks callback = new InputDialog.Callbacks() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
+            public void onInputChanged(InputDialog dialog, CharSequence s) {
+                addDialog.setWarnText("");
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                tip.setText("");
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
-        builder.setTitle("Add new book")
-                .setView(addView)
-                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        return;
-                    }
-                }).setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String newName = newNameView.getText().toString();
+            public void onPositiveClicked(InputDialog dialog) {
+                String newName = addDialog.getInputText();
                 if (newName.isEmpty()) {
-                    tip.setText("Book name can't be empty.");
+                    addDialog.setWarnText("Book name can't be empty.");
                     return;
                 }
                 if (Utils.checkBookNameExists(MainActivity.this, newName)) {
-                    tip.setText("Already exist");
+                    addDialog.setWarnText("Already exist");
                     return;
                 }
 
                 Intent intent = new Intent(MainActivity.this, BookActivity.class);
                 intent.putExtra(BookActivity.INTENT_BOOK, newName);
-                dialog.dismiss();
+                dialog.getDialog().dismiss();
                 startActivity(intent);
-
             }
-        }).show();
+
+            @Override
+            public void onNegativeClicked(InputDialog dialog) {
+                dialog.getDialog().dismiss();
+            }
+        };
+        addDialog.setCallback(callback);
+        addDialog.getDialog().show();
     }
 
     public void enterArrangeMode(){
@@ -148,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         ActionBar actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle("Arrange mode");
         mPagerAdapter.enterArrangeMode();
 
     }
@@ -158,7 +143,8 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         ActionBar actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(false);
-        mPagerAdapter.exitArrangeMode(false);
+        actionBar.setTitle(getString(R.string.app_name));
+        mPagerAdapter.exitArrangeMode(saveChange);
     }
 
     private void showSaveChangeDialog(){

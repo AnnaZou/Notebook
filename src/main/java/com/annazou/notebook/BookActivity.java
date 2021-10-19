@@ -1,5 +1,7 @@
 package com.annazou.notebook;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -12,6 +14,8 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -34,6 +39,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
     private ChapterAdapter mAdapter;
 
     private File mBookDir;
+    private TextView mEmptyView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +53,9 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         actionBar.setHomeButtonEnabled(true);
 
         mBook = getIntent().getStringExtra(INTENT_BOOK) + "";
+        actionBar.setTitle(mBook);
 
         mBookDir = Utils.getBookDir(BookActivity.this, mBook);
-        Log.e("mytest","dir = " + mBookDir.getAbsolutePath());
         if(!mBookDir.exists()){
             mBookDir.mkdirs();
         }
@@ -71,6 +77,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         mList.setAdapter(mAdapter);
         mList.setOnItemClickListener(this);
         mList.setOnItemLongClickListener(this);
+        mEmptyView = findViewById(R.id.book_empty_view);
 
     }
 
@@ -103,6 +110,44 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
                 VerifyUtils.showSetPasswordDialog(BookActivity.this, mBook);
             }
             return true;
+        } else if(item.getItemId() == R.id.rename){
+            InputDialog renameDialog = new InputDialog(this, "Rename book");
+            renameDialog.getInputTextView().setHint(mBook);
+            InputDialog.Callbacks callbacks = new InputDialog.Callbacks() {
+                @Override
+                public void onInputChanged(InputDialog dialog, CharSequence s) {
+                    dialog.setWarnText("");
+                }
+
+                @Override
+                public void onPositiveClicked(InputDialog dialog) {
+                    String newName = dialog.getInputText();
+                    if (newName.isEmpty()) {
+                        dialog.setWarnText("Book name can't be empty.");
+                        return;
+                    }
+                    if (Utils.checkBookNameExists(BookActivity.this, newName)) {
+                        dialog.setWarnText("Already exist");
+                        return;
+                    }
+                    Utils.renameFile(Utils.getBookDirPath(BookActivity.this), mBook, newName);
+                    mBook = newName;
+                    mBookDir = Utils.getBookDir(BookActivity.this, mBook);
+                    ActionBar actionBar = getSupportActionBar();
+                    actionBar.setTitle(mBook);
+                    dialog.getDialog().dismiss();
+                }
+
+                @Override
+                public void onNegativeClicked(InputDialog dialog) {
+                    dialog.getDialog().dismiss();
+                }
+            };
+            renameDialog.setCallback(callbacks);
+            renameDialog.getDialog().show();
+
+        } else if(item.getItemId() == android.R.id.home){
+            onBackPressed();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -111,6 +156,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onResume() {
         super.onResume();
         mAdapter.notifyDataSetChanged();
+        mEmptyView.setVisibility(mList.getCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -131,7 +177,6 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
 
         @Override
         public int getCount() {
-            Log.e("mytest","exist = " + mBookDir.exists());
             return mBookDir.list().length;
         }
 

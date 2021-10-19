@@ -1,36 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/note_item_bg"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?selectableItemBackground">
-
-    <View
-        android:id="@+id/note_item_bg"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:background="#0000">
+        android:background="?selectableItemBackground">
 
-        <TextView
-            android:id="@+id/note_title"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textSize="20sp" />
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/note_top_indicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/top_indicator"
+                android:scaleType="centerInside"
+                android:visibility="gone"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"/>
+            <TextView
+                android:id="@+id/note_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_alignParentLeft="true"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textSize="20sp" />
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingRight="12dp"
+            android:paddingLeft="12dp">
 
             <TextView
                 android:id="@+id/note_date"
@@ -58,7 +69,7 @@
                     android:id="@+id/arrange_star"
                     android:layout_width="@dimen/arrange_item_size"
                     android:layout_height="@dimen/arrange_item_size"
-                    android:background="@null"
+                    android:background="?selectableItemBackgroundBorderless"
                     android:scaleType="centerInside"
                     android:src="@android:drawable/btn_star_big_on" />
 
@@ -67,7 +78,7 @@
                     android:layout_width="@dimen/arrange_item_size"
                     android:layout_height="@dimen/arrange_item_size"
                     android:layout_marginStart="5dp"
-                    android:background="@null"
+                    android:background="?selectableItemBackgroundBorderless"
                     android:scaleType="centerInside"
                     android:src="@android:drawable/ic_menu_delete" />
 
@@ -76,7 +87,7 @@
                     android:layout_width="@dimen/arrange_item_size"
                     android:layout_height="@dimen/arrange_item_size"
                     android:layout_marginStart="5dp"
-                    android:background="@null"
+                    android:background="?selectableItemBackgroundBorderless"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_arrow_upward_black_48dp" />
             </LinearLayout>
