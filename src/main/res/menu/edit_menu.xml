@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/edit_undo"
+        android:title="undo"
+        android:icon="@drawable/ic_undo"
+        android:enabled="false"
+        app:showAsAction="always"/>
+
+    <item android:id="@+id/edit_redo"
+        android:title="undo"
+        android:icon="@drawable/ic_redo"
+        android:enabled="false"
+        app:showAsAction="always"/>
+
     <item android:id="@+id/color_mode"
         android:title="Color mode"
         app:showAsAction="never">

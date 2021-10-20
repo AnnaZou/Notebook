@@ -27,7 +27,7 @@ import android.widget.Toast;
 
 import java.io.File;
 
-public class EditActivity extends AppCompatActivity {
+public class EditActivity extends AppCompatActivity implements EditManager.EditRecordCallback {
 
     public static final String INTENT_BOOK = "book";
     public static final String INTENT_CHAPTER = "chapter";
@@ -44,6 +44,10 @@ public class EditActivity extends AppCompatActivity {
 
     private EditText mEditText;
     private String mFilePath;
+    private EditManager mEditManager;
+
+    private MenuItem mUndoButton;
+    private MenuItem mRedoButton;
     TextWatcher mTextWatch = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -84,6 +88,8 @@ public class EditActivity extends AppCompatActivity {
                     String content = Utils.readFile(mFilePath);
                     mEditText.setText(content);
                     mEditText.addTextChangedListener(mTextWatch);
+                    mEditManager = new EditManager(mEditText);
+                    mEditManager.setEditRecordCallback(EditActivity.this);
                     break;
                 case MSG_SAVE_AND_EXIT:
                     Message sae = mHandler.obtainMessage(MSG_SAVE, true);
@@ -150,6 +156,9 @@ public class EditActivity extends AppCompatActivity {
         colorItem.getSubMenu().clearHeader();
         MenuItem fontItem = menu.findItem(R.id.font_size);
         fontItem.getSubMenu().clearHeader();
+
+        mUndoButton = menu.findItem(R.id.edit_undo);
+        mRedoButton = menu.findItem(R.id.edit_redo);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -198,6 +207,12 @@ public class EditActivity extends AppCompatActivity {
                 break;
             case R.id.dark_mode:
                 setColorMode(true);
+                break;
+            case R.id.edit_undo:
+                mEditManager.undo();
+                break;
+            case R.id.edit_redo:
+                mEditManager.redo();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -260,5 +275,19 @@ public class EditActivity extends AppCompatActivity {
                 dialog.dismiss();
             }
         }).show();
+    }
+
+    @Override
+    public void onRedoEnabled(boolean enable) {
+        if(mRedoButton != null && mRedoButton.isEnabled() != enable) {
+            mRedoButton.setEnabled(enable);
+        }
+    }
+
+    @Override
+    public void onUndoEnabled(boolean enable) {
+        if(mUndoButton != null && mUndoButton.isEnabled() != enable) {
+            mUndoButton.setEnabled(enable);
+        }
     }
 }

@@ -105,7 +105,6 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
     public void exitArrangeMode(boolean saveChange) {
         super.exitArrangeMode(saveChange);
         if(saveChange){
-            Log.e("mytest","mNoteItems = " + mNoteItems.size() + " mArrangeList = " + mArrangeList.size() + " mDeleteList = " + mDeleteList.size());
             for(NoteItem deleteItem : mDeleteList){
                 mDatabase.deleteNote(deleteItem.name);
                 Utils.deleteFile(Utils.getNoteDirPath(getActivity()) + "/" + deleteItem.name);
