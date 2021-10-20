@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/sort"
-        android:title="Sort by create"
+    <item android:id="@+id/sort_modify"
+        android:title="Sort by last modift"
+        app:showAsAction="never"/>
+    <item android:id="@+id/sort_auto"
+        android:title="Auto sort"
         app:showAsAction="never"/>
     <item android:id="@+id/rename"
         android:title="Rename"

@@ -73,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        MenuItem store = menu.findItem(R.id.store);
+        MenuItem arrangeMode = menu.findItem(R.id.arrange);
+        store.setVisible(mIsArrangeMode ? true :false);
+        arrangeMode.setVisible(mIsArrangeMode ? false : true);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -87,6 +91,9 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         if(item.getItemId() == android.R.id.home){
             onBackPressed();
             return true;
+        }
+        if (item.getItemId() == R.id.store){
+            exitArrangeMode(true);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -134,10 +141,12 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle("Arrange mode");
         mPagerAdapter.enterArrangeMode();
+        invalidateOptionsMenu();
 
     }
 
     public void exitArrangeMode(boolean saveChange){
+        if(!mIsArrangeMode) return;
         mIsArrangeMode = false;
         mFab.show();
         ActionBar actionBar = getSupportActionBar();
@@ -145,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setTitle(getString(R.string.app_name));
         mPagerAdapter.exitArrangeMode(saveChange);
+        invalidateOptionsMenu();
     }
 
     private void showSaveChangeDialog(){

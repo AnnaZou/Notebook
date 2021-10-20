@@ -6,10 +6,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -117,6 +119,7 @@ public class VerifyUtils {
                 dialog.dismiss();
             }
         });
+        dialog.show();
     }
 
     public interface VerifyCallback {
@@ -153,6 +156,7 @@ public class VerifyUtils {
             }
         };
 
+        verifyDialog.getInputTextView().setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         verifyDialog.setCallback(dialogCallbacks);
         verifyDialog.getDialog().show();
 

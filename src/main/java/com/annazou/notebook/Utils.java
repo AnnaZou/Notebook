@@ -36,7 +36,7 @@ public class Utils {
         return format.format(date);
     }
 
-    public static String getChapterFilePath(Context context, String book, int chapter){
+    public static String getChapterFilePath(Context context, String book, String chapter){
         return getBookDirPath(context) + "/" + book + "/" + chapter;
     }
 
@@ -112,17 +112,18 @@ public class Utils {
         return title[0];
     }
 
-    public static String getChapterThumbTitle(Context context, String book, int chapter){
-        String path = getChapterFilePath(context, book,chapter);
-        return getFileThumbTitle(path);
-    }
-
     public static String getFileDate(File file){
         String date = "--/--/--";
         if(file.exists()){
-            Date lastModify = new Date(file.lastModified());
-            date = SDF.format(lastModify);
+            date = getDate(file.lastModified());
         }
+        return date;
+    }
+
+    public static String getDate(long time){
+        String date = "--/--/--";
+        Date lastModify = new Date(time);
+        date = SDF.format(lastModify);
         return date;
     }
 

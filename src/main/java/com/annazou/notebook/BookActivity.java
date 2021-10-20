@@ -30,6 +30,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BookActivity extends AppCompatActivity implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener {
     public static final String INTENT_BOOK = "book";
@@ -40,6 +42,8 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private File mBookDir;
     private TextView mEmptyView;
+
+    private List<ChapterItem> mChapterItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +82,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         mList.setOnItemClickListener(this);
         mList.setOnItemLongClickListener(this);
         mEmptyView = findViewById(R.id.book_empty_view);
-
+        mChapterItems = new ArrayList<>();
     }
 
     @Override
@@ -155,6 +159,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onResume() {
         super.onResume();
+        refreshChapterList();
         mAdapter.notifyDataSetChanged();
         mEmptyView.setVisibility(mList.getCount() == 0 ? View.VISIBLE : View.GONE);
     }
@@ -173,11 +178,32 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         startActivity(intent);
     }
 
+    private void autoSort(){
+        refreshChapterList();
+        for(ChapterItem item : mChapterItems){
+         //   item.thumb.
+        }
+    }
+
+    private void refreshChapterList(){
+        mChapterItems.clear();
+        File book = Utils.getBookDir(this, mBook);
+        File[] list = book.listFiles();
+
+        for(File file : list){
+            ChapterItem item = new ChapterItem();
+            item.fileName = file.getName();
+            item.date = file.lastModified();
+            item.thumb = Utils.getFileThumbTitle(file.getAbsolutePath());
+            mChapterItems.add(item);
+        }
+    }
+
     private class ChapterAdapter extends BaseAdapter{
 
         @Override
         public int getCount() {
-            return mBookDir.list().length;
+            return mChapterItems.size();
         }
 
         @Override
@@ -202,9 +228,9 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
             }
 
             ViewHolder holder = (ViewHolder) convertView.getTag();
-            int chapter = position + 1;
-            holder.title.setText(Utils.getChapterThumbTitle(BookActivity.this, mBook, chapter));
-            holder.time.setText(Utils.getFileDate(new File(Utils.getChapterFilePath(BookActivity.this, mBook, chapter))));
+            ChapterItem item = mChapterItems.get(position);
+            holder.title.setText(item.thumb);
+            holder.time.setText(Utils.getDate(item.date));
             return convertView;
         }
     }
@@ -213,6 +239,12 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         TextView title;
         TextView time;
         ImageView star;
+    }
+
+    class ChapterItem{
+        String fileName;
+        String thumb;
+        long date;
     }
 
 }
