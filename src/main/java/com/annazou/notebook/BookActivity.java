@@ -14,6 +14,8 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.Handler;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -32,9 +34,13 @@ import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BookActivity extends AppCompatActivity implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener {
     public static final String INTENT_BOOK = "book";
+    private static final int MSG_UPDATE_LIST = 1;
+    private static final int MSG_SORT = 2;
 
     private String mBook;
     private ListView mList;
@@ -44,6 +50,19 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
     private TextView mEmptyView;
 
     private List<ChapterItem> mChapterItems;
+
+    Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            switch (msg.what){
+                case MSG_SORT:
+                    refreshChapterList();
+                    mAdapter.notifyDataSetChanged();
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +94,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
                 startActivity(intent);
             }
         });
+        mChapterItems = new ArrayList<>();
 
         mList = findViewById(R.id.chapter_list);
         mAdapter = new ChapterAdapter();
@@ -82,7 +102,6 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         mList.setOnItemClickListener(this);
         mList.setOnItemLongClickListener(this);
         mEmptyView = findViewById(R.id.book_empty_view);
-        mChapterItems = new ArrayList<>();
     }
 
     @Override
@@ -152,6 +171,12 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
 
         } else if(item.getItemId() == android.R.id.home){
             onBackPressed();
+        } else if(item.getItemId() == R.id.sort_auto){
+            SettingUtils.setBookSortMethod(this,SettingUtils.SORT_AUTO);
+            mHandler.sendEmptyMessage(MSG_SORT);
+        } else if(item.getItemId() == R.id.sort_modify){
+            SettingUtils.setBookSortMethod(this, SettingUtils.SORT_MODIFY);
+            mHandler.sendEmptyMessage(MSG_SORT);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -179,10 +204,152 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void autoSort(){
-        refreshChapterList();
-        for(ChapterItem item : mChapterItems){
-         //   item.thumb.
+        initAutoSortIndex();
+        for(int i = 0; i < mChapterItems.size(); i++){
+            ChapterItem tmp;
+            for (int j = i + 1; j < mChapterItems.size(); j++){
+                if(mChapterItems.get(i) .autoIndex > mChapterItems.get(j).autoIndex){
+                    tmp = mChapterItems.get(i);
+                    mChapterItems.set(i, mChapterItems.get(j));
+                    mChapterItems.set(j,tmp);
+                }
+            }
         }
+    }
+
+    private void sortByModify(){
+        for(int i = 0; i < mChapterItems.size(); i++){
+            ChapterItem tmp;
+            for (int j = i + 1; j < mChapterItems.size(); j++){
+                if(mChapterItems.get(i) .date < mChapterItems.get(j).date){
+                    tmp = mChapterItems.get(i);
+                    mChapterItems.set(i, mChapterItems.get(j));
+                    mChapterItems.set(j,tmp);
+                }
+            }
+        }
+    }
+
+    private void initAutoSortIndex(){
+        Pattern patternDigit = Pattern.compile("\\d+");
+        Pattern patternChineseNumber = Pattern.compile("[零一二三四五六七八九十百]+");
+        for(ChapterItem item : mChapterItems){
+            String thumb = item.thumb;
+            item.autoIndex = Integer.MAX_VALUE;
+            String index = "";
+            Matcher matcher = patternDigit.matcher(thumb);
+            if (matcher.find()) {
+                index = matcher.group(0);
+                item.autoIndex = Integer.valueOf(index);
+                continue;
+            }
+            if(index.isEmpty()) {
+                matcher = patternChineseNumber.matcher(thumb);
+                String chineseNumber = "";
+                if (matcher.find()){
+                    chineseNumber = matcher.group(0);
+                    item.autoIndex = getNumberFromChinese(chineseNumber);
+                    continue;
+                }
+
+            }
+        }
+    }
+
+    private int getNumberFromChinese(String match){
+        List<String> splitList = new ArrayList<>();
+        String splitListItem = "";
+        String lastUnit = "";
+        List<String> units = new ArrayList<>();
+        units.add("十");
+        units.add("百");
+
+        for(int n = 0; n < match.length(); n++){
+            String curNumber = match.substring(n, n + 1);
+            if(units.indexOf(curNumber) < 0) {
+                if (!splitListItem.isEmpty()) {
+                    if (lastUnit.equals("百")) {
+                        splitListItem += "十";
+                    }
+                    splitList.add(splitListItem);
+                    break;
+                }
+                splitListItem += curNumber;
+                if(curNumber.equals("零")) {
+                    if (lastUnit.equals("百")) {
+                        splitListItem += "十";
+                        lastUnit = "十";
+                    }
+                    lastUnit = (units.indexOf(lastUnit) - 1) >= 0 ? units.get(units.indexOf(lastUnit) - 1) : "";
+                    splitListItem += lastUnit;
+                    splitList.add(splitListItem);
+                    splitListItem = "";
+                    continue;
+                }
+            } else {
+                if(!lastUnit.isEmpty() && units.indexOf(lastUnit) <= units.indexOf(curNumber)){
+                    if(splitListItem.length() == 1) {
+                        splitListItem += (units.indexOf(lastUnit) - 1) >= 0 ? units.get(units.indexOf(lastUnit) - 1) : "";
+                    }
+                    splitList.add(splitListItem);
+                    break;
+                }
+                if (splitListItem.isEmpty()){
+                    splitListItem += "一";
+                }
+                lastUnit = curNumber;
+                splitListItem += curNumber;
+                splitList.add(splitListItem);
+                splitListItem = "";
+            }
+            if(n == match.length() - 1 && !splitListItem.isEmpty()){
+                if(splitListItem.length() == 1) {
+                    splitListItem += (units.indexOf(lastUnit) - 1) >= 0 ? units.get(units.indexOf(lastUnit) - 1) : "";
+                }
+                splitList.add(splitListItem);
+            }
+        }
+
+        int result = 0;
+        for(int m = 0; m < splitList.size(); m++){
+            result += getUnit(splitList.get(m));
+        }
+        return result;
+    }
+
+    private int getUnit(String unit){
+        if(unit.contains("百")){
+            return getCount(unit.replace("百","")) * 100;
+        } else if(unit.contains("十")){
+            return getCount(unit.replace("十","")) * 10;
+        }
+        return getCount(unit);
+    }
+
+    private int getCount(String chinese){
+        switch (chinese){
+            case "一":
+                return 1;
+            case "二":
+                return 2;
+            case "三":
+                return 3;
+            case "四":
+                return 4;
+            case "五":
+                return 5;
+            case "六":
+                return 6;
+            case "七":
+                return 7;
+            case "八":
+                return 8;
+            case "九":
+                return 9;
+            case "零":
+                return 0;
+        }
+        return -1;
     }
 
     private void refreshChapterList(){
@@ -196,6 +363,13 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
             item.date = file.lastModified();
             item.thumb = Utils.getFileThumbTitle(file.getAbsolutePath());
             mChapterItems.add(item);
+        }
+
+        String sort = SettingUtils.getBookSortMethod(this);
+        if(sort.equals(SettingUtils.SORT_MODIFY)){
+            sortByModify();
+        } else {
+            autoSort();
         }
     }
 
@@ -245,6 +419,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         String fileName;
         String thumb;
         long date;
+        int autoIndex;
     }
 
 }
