@@ -91,7 +91,7 @@
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_arrow_upward_black_48dp" />
             </LinearLayout>
-            <ImageButton
+            <ImageView
                 android:id="@+id/star"
                 android:layout_width="@dimen/arrange_item_size"
                 android:layout_height="@dimen/arrange_item_size"

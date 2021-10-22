@@ -39,7 +39,8 @@ public class NoteDatabaseHelper extends SQLiteOpenHelper {
         cv.put(COLUMN_NAME, fileName);
         cv.put(COLUMN_ORDER, 0);
         cv.put(COLUMN_STAR, 0);
-        getWritableDatabase().insert(TABLE_NAME, null, cv);    }
+        getWritableDatabase().insert(TABLE_NAME, null, cv);
+    }
 
     public void deleteNote(String fileName){
         getWritableDatabase().delete(TABLE_NAME, COLUMN_NAME + "=?", new String[]{fileName});

@@ -3,35 +3,102 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:padding="10dp">
+    android:id="@+id/chapter_item_bg">
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1.0"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="?selectableItemBackground">
 
-        <TextView
-            android:id="@+id/chapter_title"
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/chapter_top_indicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/top_indicator"
+                android:scaleType="centerInside"
+                android:visibility="gone"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"/>
+            <TextView
+                android:id="@+id/chapter_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_alignParentLeft="true"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textSize="20sp" />
+        </RelativeLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textSize="24sp" />
+            android:orientation="horizontal"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:layout_marginBottom="10dp">
 
-        <TextView
-            android:id="@+id/chapter_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textColor="#9000"/>
+            <TextView
+                android:id="@+id/chapter_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#9000"
+                android:textSize="20sp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"/>
+
+            <LinearLayout
+                android:id="@+id/chapter_arrange_items"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ImageButton
+                    android:id="@+id/arrange_star"
+                    android:layout_width="@dimen/arrange_item_size"
+                    android:layout_height="@dimen/arrange_item_size"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:scaleType="centerInside"
+                    android:src="@android:drawable/btn_star_big_on" />
+
+                <ImageButton
+                    android:id="@+id/arrange_delete"
+                    android:layout_width="@dimen/arrange_item_size"
+                    android:layout_height="@dimen/arrange_item_size"
+                    android:layout_marginStart="5dp"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:scaleType="centerInside"
+                    android:src="@android:drawable/ic_menu_delete" />
+
+                <ImageButton
+                    android:id="@+id/arrange_top"
+                    android:layout_width="@dimen/arrange_item_size"
+                    android:layout_height="@dimen/arrange_item_size"
+                    android:layout_marginStart="5dp"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_arrow_upward_black_48dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/chapter_star"
+                android:layout_width="@dimen/arrange_item_size"
+                android:layout_height="@dimen/arrange_item_size"
+                android:background="@null"
+                android:scaleType="centerInside"
+                android:src="@android:drawable/btn_star_big_on" />
+        </LinearLayout>
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/chapter_star"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:scaleType="centerInside"
-        android:layout_marginRight="10dp"/>
-
 </LinearLayout>

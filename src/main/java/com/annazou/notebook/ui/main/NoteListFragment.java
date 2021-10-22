@@ -133,7 +133,6 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
             notes.mkdirs();
         }
         String[] fileList = notes.list();
-        Log.e("mytest","fileList = " + fileList.length);
         mNoteItems = new ArrayList<>();
         List<NoteItem> tops = new ArrayList<>();
         for(String note : fileList){
@@ -261,7 +260,7 @@ public class NoteListFragment extends BasicListFragment implements AdapterView.O
         TextView date;
         LinearLayout arrangeItems;
         View background;
-        ImageButton star;
+        ImageView star;
         ImageView top;
     }
 

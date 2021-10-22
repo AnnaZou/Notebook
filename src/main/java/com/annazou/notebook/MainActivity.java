@@ -15,16 +15,9 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.os.Message;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import com.annazou.notebook.ui.main.SectionsPagerAdapter;
 
@@ -59,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
                     public void onClick(DialogInterface dialog, int which) {
                         if(which == 0){
                             Intent intent = new Intent(MainActivity.this, EditActivity.class);
-                            intent.putExtra(EditActivity.INTENT_NOTE,Utils.getNewNoteName());
+                            intent.putExtra(EditActivity.INTENT_NOTE,Utils.getNewFileName());
                             startActivity(intent);
                         }else if (which == 1){
                             showAddBookDialog();
@@ -87,12 +80,10 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
                 enterArrangeMode();
             }
             return true;
-        }
-        if(item.getItemId() == android.R.id.home){
+        } else if (item.getItemId() == android.R.id.home){
             onBackPressed();
             return true;
-        }
-        if (item.getItemId() == R.id.store){
+        } else if (item.getItemId() == R.id.store){
             exitArrangeMode(true);
         }
         return super.onOptionsItemSelected(item);

@@ -8,6 +8,7 @@
     <color name="dark_mode_text_color">#EEE</color>
     <color name="arrange_mode_delete_bg">#999</color>
     <color name="note_item_bg">#eeeeb0</color>
+    <color name="chapter_item_bg">#FFF</color>
 
     <array name="note_colors">
         <item></item>

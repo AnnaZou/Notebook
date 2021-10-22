@@ -38,7 +38,7 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
     private static final int MSG_SAVE_AND_EXIT = 3;
 
     private String mBook;
-    private int mChapter;
+    private String mChapter;
     private String mNote;
     private boolean mChanged;
 
@@ -76,6 +76,10 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
                             NoteDatabaseHelper database = new NoteDatabaseHelper(EditActivity.this);
                             database.addNote(mNote);
                         }
+                        if(mBook != null && !mBook.isEmpty()){
+                            BookDatabaseHelper databaseHelper = new BookDatabaseHelper(EditActivity.this);
+                            databaseHelper.addChapter(mChapter, mBook);
+                        }
                     }
                     Utils.writeFile(mFilePath, mEditText.getText().toString());
                     mChanged = false;
@@ -112,7 +116,7 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         mBook = getIntent().getStringExtra(INTENT_BOOK);
-        mChapter = getIntent().getIntExtra(INTENT_CHAPTER,0);
+        mChapter = getIntent().getStringExtra(INTENT_CHAPTER);
         mNote = getIntent().getStringExtra(INTENT_NOTE );
 
         if(mNote != null && !mNote.isEmpty()){

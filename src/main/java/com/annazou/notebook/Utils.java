@@ -8,12 +8,16 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Utils {
     public static final String TAG = "Notebook";
     public static final String DIR_NOTE = "notes";
     public static final String DIR_BOOK = "books";
+
+    public static final int MAX_KEY_WORD_LENGTH = 20;
 
     private static final SimpleDateFormat SDF = new SimpleDateFormat("yy/MM/dd");
 
@@ -30,7 +34,7 @@ public class Utils {
         return dir;
     }
 
-    public static String getNewNoteName(){
+    public static String getNewFileName(){
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMddhhmmss");
         return format.format(date);
@@ -125,6 +129,53 @@ public class Utils {
         Date lastModify = new Date(time);
         date = SDF.format(lastModify);
         return date;
+    }
+
+    public List<File> searchBookContent(Context context, String key){
+        if(key.length() > MAX_KEY_WORD_LENGTH) key = key.substring(0,MAX_KEY_WORD_LENGTH);
+        File dir = new File(getBookDirPath(context));
+        File[] books = dir.listFiles();
+        List<File> matchedBook = new ArrayList<>();
+        for(File book : books){
+            boolean matched = false;
+            for (File chapter : book.listFiles()){
+                matched = checkContentContains(chapter.getAbsolutePath(), key);
+                if(matched) break;
+            }
+            if (matched){
+                matchedBook.add(book);
+            }
+        }
+        return matchedBook;
+    }
+
+    public boolean checkNoteContains(String notePath, String key){
+        if(key.length() > MAX_KEY_WORD_LENGTH) key = key.substring(0,MAX_KEY_WORD_LENGTH);
+        return checkContentContains(notePath, key);
+    }
+
+    private boolean checkContentContains(String path, String key){
+        boolean matched = false;
+        int length = key.length() * 2;
+        try {
+            FileInputStream inputStream = new FileInputStream(path);
+            byte[] buffer = new byte[100];
+            String content = "";
+            int len = inputStream.read(buffer);
+            while(len > 0){
+                content += new String(buffer,0,len);
+                if(content.contains(key)){
+                    matched = true;
+                    break;
+                }
+                content = content.substring(len - length > 0 ? len - length : 0 ,len);
+                len = inputStream.read(buffer);
+            }
+            inputStream.close();
+        } catch (Exception e) {
+            Log.e(TAG, "Error on write File:" + e);
+        }
+        return matched;
     }
 
 }

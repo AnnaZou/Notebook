@@ -1,13 +1,13 @@
 package com.annazou.notebook;
 
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.annazou.notebook.ui.main.BookListFragment;
+import com.annazou.notebook.ui.main.NoteListFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -16,8 +16,6 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.os.Handler;
 import android.os.Message;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,8 +24,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -37,10 +36,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BookActivity extends AppCompatActivity implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener {
+public class BookActivity extends AppCompatActivity implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener, View.OnClickListener {
     public static final String INTENT_BOOK = "book";
     private static final int MSG_UPDATE_LIST = 1;
     private static final int MSG_SORT = 2;
+
+    boolean mIsArrangeMode;
 
     private String mBook;
     private ListView mList;
@@ -48,8 +49,14 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private File mBookDir;
     private TextView mEmptyView;
+    FloatingActionButton mFab;
 
     private List<ChapterItem> mChapterItems;
+    private List<ChapterItem> mArrangeList;
+    private List<ChapterItem> mDeleteList;
+    int mTopCount;
+
+    BookDatabaseHelper mDatabase;
 
     Handler mHandler = new Handler(){
         @Override
@@ -83,18 +90,21 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
             mBookDir.mkdirs();
         }
 
-        FloatingActionButton fab = findViewById(R.id.add_chapter);
-        fab.setOnClickListener(new View.OnClickListener() {
+        mDatabase = new BookDatabaseHelper(this);
+
+        mFab = findViewById(R.id.add_chapter);
+        mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int chapter = mBookDir.list().length + 1;
                 Intent intent = new Intent(BookActivity.this, EditActivity.class);
                 intent.putExtra(EditActivity.INTENT_BOOK, mBook);
-                intent.putExtra(EditActivity.INTENT_CHAPTER, chapter);
+                intent.putExtra(EditActivity.INTENT_CHAPTER, Utils.getNewFileName());
                 startActivity(intent);
             }
         });
         mChapterItems = new ArrayList<>();
+        mArrangeList = new ArrayList<>();
+        mDeleteList = new ArrayList<>();
 
         mList = findViewById(R.id.chapter_list);
         mAdapter = new ChapterAdapter();
@@ -107,6 +117,9 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.book_menu, menu);
+        menu.setGroupVisible(R.id.book_moreMenu,mIsArrangeMode ? false : true);
+        MenuItem store = menu.findItem(R.id.book_store);
+        store.setVisible(mIsArrangeMode ? true : false);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -177,6 +190,8 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         } else if(item.getItemId() == R.id.sort_modify){
             SettingUtils.setBookSortMethod(this, SettingUtils.SORT_MODIFY);
             mHandler.sendEmptyMessage(MSG_SORT);
+        } else if (item.getItemId() == R.id.book_store){
+            exitArrangeMode(true);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -184,24 +199,106 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onResume() {
         super.onResume();
-        refreshChapterList();
+        if (!mIsArrangeMode){
+            refreshChapterList();
+        }
         mAdapter.notifyDataSetChanged();
         mEmptyView.setVisibility(mList.getCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
     @Override
+    public void onBackPressed() {
+        if(mIsArrangeMode){
+            showSaveChangeDialog();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         //delete, star
+        if(!mIsArrangeMode){
+            enterArrangeMode();
+            return true;
+        }
         return false;
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        if(mIsArrangeMode) return;
+        ChapterItem item = mChapterItems.get(position);
         Intent intent = new Intent(this, EditActivity.class);
         intent.putExtra(EditActivity.INTENT_BOOK, mBook);
-        intent.putExtra(EditActivity.INTENT_CHAPTER, position + 1);
+        intent.putExtra(EditActivity.INTENT_CHAPTER, item.fileName);
         startActivity(intent);
     }
+
+    public void enterArrangeMode(){
+        mIsArrangeMode = true;
+        mFab.hide();
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setHomeButtonEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle("Arrange mode");
+        invalidateOptionsMenu();
+        mArrangeList = mChapterItems;
+        mAdapter.notifyDataSetChanged();
+    }
+
+    public void exitArrangeMode(boolean saveChange){
+        if(!mIsArrangeMode) return;
+        mIsArrangeMode = false;
+        mFab.show();
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setHomeButtonEnabled(false);
+        actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setTitle(mBook);
+        invalidateOptionsMenu();
+
+        if(saveChange){
+            for(ChapterItem deleteItem : mDeleteList){
+                mDatabase.deleteChapter(deleteItem.fileName, mBook);
+                Utils.deleteFile(Utils.getBookDirPath(this) + "/" + mBook + "/" + deleteItem.fileName);
+                mArrangeList.remove(deleteItem);
+            }
+            mTopCount = 0;
+            for (int i = 0; i < mArrangeList.size(); i++){
+                ChapterItem item = mArrangeList.get(i);
+                if(item.topOrder > 0) {
+                    mTopCount++;
+                    item.topOrder = i + 1;
+                    mDatabase.setTopOrder(item.fileName,i + 1);
+                } else {
+                    mDatabase.setTopOrder(item.fileName, 0);
+                }
+                mDatabase.setStar(item.fileName, item.star);
+            }
+        }
+        refreshChapterList();
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void showSaveChangeDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Save change?").setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                exitArrangeMode(true);
+            }
+        }).setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        }).setNegativeButton("Don't save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                exitArrangeMode(false);
+            }
+        }).show();
+    }
+
 
     private void autoSort(){
         initAutoSortIndex();
@@ -266,22 +363,17 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
 
         for(int n = 0; n < match.length(); n++){
             String curNumber = match.substring(n, n + 1);
+            String expectedUnit = (units.indexOf(lastUnit) - 1) >= 0 ? units.get(units.indexOf(lastUnit) - 1) : "";
             if(units.indexOf(curNumber) < 0) {
                 if (!splitListItem.isEmpty()) {
-                    if (lastUnit.equals("百")) {
-                        splitListItem += "十";
-                    }
+                    splitListItem += expectedUnit;
                     splitList.add(splitListItem);
                     break;
                 }
                 splitListItem += curNumber;
                 if(curNumber.equals("零")) {
-                    if (lastUnit.equals("百")) {
-                        splitListItem += "十";
-                        lastUnit = "十";
-                    }
-                    lastUnit = (units.indexOf(lastUnit) - 1) >= 0 ? units.get(units.indexOf(lastUnit) - 1) : "";
-                    splitListItem += lastUnit;
+                    lastUnit = expectedUnit;
+                    splitListItem += expectedUnit;
                     splitList.add(splitListItem);
                     splitListItem = "";
                     continue;
@@ -289,7 +381,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
             } else {
                 if(!lastUnit.isEmpty() && units.indexOf(lastUnit) <= units.indexOf(curNumber)){
                     if(splitListItem.length() == 1) {
-                        splitListItem += (units.indexOf(lastUnit) - 1) >= 0 ? units.get(units.indexOf(lastUnit) - 1) : "";
+                        splitListItem += expectedUnit;
                     }
                     splitList.add(splitListItem);
                     break;
@@ -304,7 +396,7 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
             }
             if(n == match.length() - 1 && !splitListItem.isEmpty()){
                 if(splitListItem.length() == 1) {
-                    splitListItem += (units.indexOf(lastUnit) - 1) >= 0 ? units.get(units.indexOf(lastUnit) - 1) : "";
+                    splitListItem += expectedUnit;
                 }
                 splitList.add(splitListItem);
             }
@@ -326,30 +418,10 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         return getCount(unit);
     }
 
+    List<String> chineseNumbers = new ArrayList<String>(){{
+        add("零"); add("一");add("二");add("三");add("四");add("五");add("六");add("七");add("八");add("九");}};
     private int getCount(String chinese){
-        switch (chinese){
-            case "一":
-                return 1;
-            case "二":
-                return 2;
-            case "三":
-                return 3;
-            case "四":
-                return 4;
-            case "五":
-                return 5;
-            case "六":
-                return 6;
-            case "七":
-                return 7;
-            case "八":
-                return 8;
-            case "九":
-                return 9;
-            case "零":
-                return 0;
-        }
-        return -1;
+        return chineseNumbers.indexOf(chinese);
     }
 
     private void refreshChapterList(){
@@ -357,11 +429,16 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         File book = Utils.getBookDir(this, mBook);
         File[] list = book.listFiles();
 
+        mTopCount = 0;
+
         for(File file : list){
             ChapterItem item = new ChapterItem();
             item.fileName = file.getName();
             item.date = file.lastModified();
             item.thumb = Utils.getFileThumbTitle(file.getAbsolutePath());
+            item.star = mDatabase.isStar(item.fileName);
+            item.topOrder = mDatabase.getTopOrder(item.fileName);
+            if(item.topOrder > 0) mTopCount++;
             mChapterItems.add(item);
         }
 
@@ -371,13 +448,65 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         } else {
             autoSort();
         }
+
+        for(int i = 0; i < mChapterItems.size(); i++){
+            if(i < mTopCount) {
+                mChapterItems.add(0, null);
+            } else {
+                ChapterItem item = mChapterItems.get(i);
+                if(item.topOrder > 0) {
+                    mChapterItems.set(item.topOrder - 1, item);
+                    mChapterItems.remove(i);
+                    i--;
+                }
+            }
+        }
+        mDeleteList = new ArrayList<>();
+        mArrangeList = new ArrayList<>();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.arrange_star:
+                int position = (int) v.getTag();
+                mArrangeList.get(position).star = !mArrangeList.get(position).star;
+                mAdapter.notifyDataSetChanged();
+                break;
+            case R.id.arrange_delete:
+                int position1 = (int) v.getTag();
+                ChapterItem item = mArrangeList.get(position1);
+                if(mDeleteList.contains(item)){
+                    mDeleteList.remove(item);
+                } else {
+                    mDeleteList.add(item);
+                }
+                mAdapter.notifyDataSetChanged();
+                break;
+            case R.id.arrange_top:
+                int position2 = (int) v.getTag();
+                ChapterItem item2 = mArrangeList.get(position2);
+                if(item2.topOrder <= 0) {
+                    mTopCount++;
+                    mArrangeList.remove(position2);
+                    mArrangeList.add(0, item2);
+                    item2.topOrder = 1;
+                } else {
+                    mTopCount--;
+                    item2.topOrder = 0;
+                    mArrangeList.remove(position2);
+                    mArrangeList.add(mTopCount, item2);
+                }
+                mAdapter.notifyDataSetChanged();
+                break;
+        }
     }
 
     private class ChapterAdapter extends BaseAdapter{
 
         @Override
         public int getCount() {
-            return mChapterItems.size();
+            return mIsArrangeMode ? mArrangeList.size() : mChapterItems.size();
         }
 
         @Override
@@ -398,13 +527,36 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
                 holder.title = convertView.findViewById(R.id.chapter_title);
                 holder.time = convertView.findViewById(R.id.chapter_time);
                 holder.star = convertView.findViewById(R.id.chapter_star);
+
+                holder.arrangeItems = convertView.findViewById(R.id.chapter_arrange_items);
+                holder.background = convertView.findViewById(R.id.chapter_item_bg);
+                holder.top = convertView.findViewById(R.id.chapter_top_indicator);
                 convertView.setTag(holder);
             }
 
             ViewHolder holder = (ViewHolder) convertView.getTag();
-            ChapterItem item = mChapterItems.get(position);
+            ChapterItem item = mIsArrangeMode ? mArrangeList.get(position) : mChapterItems.get(position);
             holder.title.setText(item.thumb);
             holder.time.setText(Utils.getDate(item.date));
+            holder.top.setVisibility(item.topOrder > 0 ? View.VISIBLE : View.GONE);
+            holder.star.setVisibility(mIsArrangeMode ? View.GONE : item.star ? View.VISIBLE : View.GONE);
+            holder.arrangeItems.setVisibility(mIsArrangeMode ? View.VISIBLE : View.GONE);
+            holder.background.setBackgroundColor(getColor(mDeleteList.contains(item) ?
+                    R.color.arrange_mode_delete_bg : R.color.chapter_item_bg));
+            if(mIsArrangeMode){
+                ImageButton star = holder.arrangeItems.findViewById(R.id.arrange_star);
+                star.setTag(position);
+                star.setImageResource(item.star ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
+                star.setOnClickListener(BookActivity.this);
+
+                ImageButton delete = holder.arrangeItems.findViewById(R.id.arrange_delete);
+                delete.setTag(position);
+                delete.setOnClickListener(BookActivity.this);
+
+                ImageButton top = holder.arrangeItems.findViewById(R.id.arrange_top);
+                top.setTag(position);
+                top.setOnClickListener(BookActivity.this);
+            }
             return convertView;
         }
     }
@@ -413,6 +565,9 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         TextView title;
         TextView time;
         ImageView star;
+        LinearLayout arrangeItems;
+        View background;
+        ImageView top;
     }
 
     class ChapterItem{
@@ -420,6 +575,8 @@ public class BookActivity extends AppCompatActivity implements AdapterView.OnIte
         String thumb;
         long date;
         int autoIndex;
+        boolean star;
+        int topOrder;
     }
 
 }
