@@ -6,8 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.io.File;
-
 public class NoteDatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_NAME = "note_db";
     private static final int VERSION = 1;

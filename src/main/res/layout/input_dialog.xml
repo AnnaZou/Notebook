@@ -29,13 +29,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="center">
-        <Button
-            android:id="@+id/input_dialog_positive"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#111"
-            android:text="OK"
-            android:background="?selectableItemBackground"/>
+
         <Button
             android:id="@+id/input_dialog_negative"
             android:layout_width="wrap_content"
@@ -43,7 +37,16 @@
             android:textColor="#111"
             android:background="?selectableItemBackground"
             android:text="Cancel"
-            android:layout_marginStart="36dp" />
+            />
+
+        <Button
+            android:id="@+id/input_dialog_positive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#111"
+            android:text="OK"
+            android:background="?selectableItemBackground"
+            android:layout_marginStart="36dp"/>
     </LinearLayout>
 
 </LinearLayout>

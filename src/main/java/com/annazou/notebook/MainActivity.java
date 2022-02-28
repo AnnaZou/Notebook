@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
     SectionsPagerAdapter mPagerAdapter;
     FloatingActionButton mFab;
     boolean mIsArrangeMode;
+    boolean mIsSearchMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +69,10 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         getMenuInflater().inflate(R.menu.main_menu, menu);
         MenuItem store = menu.findItem(R.id.store);
         MenuItem arrangeMode = menu.findItem(R.id.arrange);
-        store.setVisible(mIsArrangeMode ? true :false);
-        arrangeMode.setVisible(mIsArrangeMode ? false : true);
+        MenuItem search = menu.findItem(R.id.search);
+        store.setVisible(mIsSearchMode ? false : mIsArrangeMode ? true :false);
+        arrangeMode.setVisible(mIsSearchMode ? false : mIsArrangeMode ? false : true);
+        search.setVisible(!mIsArrangeMode);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -85,6 +88,12 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
             return true;
         } else if (item.getItemId() == R.id.store){
             exitArrangeMode(true);
+        } else if(item.getItemId() == R.id.search){
+            if(!mIsSearchMode) {
+                enterSearchMode();
+            } else {
+                exitSearchMode();
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -133,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         actionBar.setTitle("Arrange mode");
         mPagerAdapter.enterArrangeMode();
         invalidateOptionsMenu();
-
     }
 
     public void exitArrangeMode(boolean saveChange){
@@ -145,6 +153,27 @@ public class MainActivity extends AppCompatActivity implements BasicListFragment
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setTitle(getString(R.string.app_name));
         mPagerAdapter.exitArrangeMode(saveChange);
+        invalidateOptionsMenu();
+    }
+
+    public void enterSearchMode(){
+        mIsSearchMode = true;
+        mFab.hide();
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setHomeButtonEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle("Arrange mode");
+        invalidateOptionsMenu();
+    }
+
+    public void exitSearchMode(){
+        if(!mIsSearchMode) return;
+        mIsSearchMode = false;
+        mFab.show();
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setHomeButtonEnabled(false);
+        actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setTitle(getString(R.string.app_name));
         invalidateOptionsMenu();
     }
 

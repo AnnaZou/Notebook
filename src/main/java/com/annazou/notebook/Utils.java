@@ -1,12 +1,17 @@
 package com.annazou.notebook;
 
 import android.content.Context;
+import android.os.Environment;
+import android.os.FileUtils;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,6 +21,7 @@ public class Utils {
     public static final String TAG = "Notebook";
     public static final String DIR_NOTE = "notes";
     public static final String DIR_BOOK = "books";
+    public static final String DIR_COPY = "Notebook";
 
     public static final int MAX_KEY_WORD_LENGTH = 20;
 
@@ -100,6 +106,28 @@ public class Utils {
         }
     }
 
+    public static boolean copyFile(String fromFile, String toFile){
+        File file = new File(fromFile);
+        if(!file.exists() || !file.canRead()) return false;
+        try {
+            InputStream fosfrom = new FileInputStream(fromFile);
+            OutputStream fosto = new FileOutputStream(toFile);
+            byte bt[] = new byte[1024];
+            int c;
+            while ((c = fosfrom.read(bt)) > 0)
+            {
+                fosto.write(bt, 0, c);
+            }
+            fosfrom.close();
+            fosto.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
     public static String getFileThumbTitle(String filePath){
         StringBuilder sb = new StringBuilder("");
         try {
@@ -176,6 +204,40 @@ public class Utils {
             Log.e(TAG, "Error on write File:" + e);
         }
         return matched;
+    }
+
+    private static String getCopyDir(){
+        String dir = Environment.getExternalStorageDirectory() + "/" + DIR_COPY;
+        File file = new File(dir);
+        if(!file.exists()) file.mkdir();
+        File notes = new File(dir + "/" + DIR_NOTE);
+        if(!notes.exists()) notes.mkdir();
+        File books = new File(dir + "/" + DIR_BOOK);
+        if(!books.exists()) books.mkdir();
+
+        return dir;
+    }
+
+    public static boolean export(Context context, String note){
+        String notePath = getNoteDirPath(context) + "/" + note;
+        String copyPath = getCopyDir() + "/" + DIR_NOTE + "/" + note;
+        return copyFile(notePath, copyPath);
+    }
+
+    public static boolean export(Context context, String book, String chapter){
+        if(chapter == null || chapter.isEmpty()) {
+            File books = getBookDir(context, book);
+            boolean result = false;
+            for(String file : books.list()){
+                result = export(context, book, file);
+            }
+            return result;
+        } else {
+            String chapterFile = book + "/" + chapter;
+            String bookPath = getBookDirPath(context) + chapterFile;
+            String copyPath = getCopyDir() + "/" + DIR_BOOK + "/" + chapterFile;
+            return copyFile(bookPath, copyPath);
+        }
     }
 
 }
