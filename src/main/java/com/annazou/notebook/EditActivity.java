@@ -140,6 +140,7 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
                 mHandler.sendEmptyMessage(MSG_SAVE);
             }
         });
+        MoveableView.addMoveControl(fab);
 
         mEditText = findViewById(R.id.edit);
         refreshFontSize(SettingUtils.getFontSize(this));
@@ -217,6 +218,8 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
                 break;
             case R.id.edit_redo:
                 mEditManager.redo();
+                break;
+            case R.id.add_image:
                 break;
         }
         return super.onOptionsItemSelected(item);

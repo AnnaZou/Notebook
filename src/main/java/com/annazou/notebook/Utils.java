@@ -64,7 +64,7 @@ public class Utils {
     public static boolean writeFile(String filePath, String content){
         try {
             FileOutputStream outputStream = new FileOutputStream(new File(filePath));
-            outputStream.write(content.getBytes());
+            outputStream.write(content.getBytes("UTF-8"));
             outputStream.close();
             return true;
         } catch (java.io.FileNotFoundException e) {
@@ -79,10 +79,10 @@ public class Utils {
         StringBuilder sb = new StringBuilder("");
         try {
             FileInputStream inputStream = new FileInputStream(path);
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[inputStream.available()];
             int len = inputStream.read(buffer);
             while(len > 0){
-                sb.append(new String(buffer,0,len));
+                sb.append(new String(buffer,0,len,"UTF-8"));
                 len = inputStream.read(buffer);
             }
             inputStream.close();

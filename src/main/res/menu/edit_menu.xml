@@ -46,4 +46,8 @@
         </menu>
     </item>
 
+    <item android:id="@+id/add_image"
+        android:title="Add image"
+        app:showAsAction="never"/>
+
 </menu>
