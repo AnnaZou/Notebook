@@ -19,6 +19,7 @@
         <activity
             android:name=".EditActivity"
             android:label="@string/title_activity_edit"
+            android:windowSoftInputMode="adjustUnspecified"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".MainActivity"

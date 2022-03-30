@@ -21,8 +21,12 @@ import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -45,6 +49,8 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
     private EditText mEditText;
     private String mFilePath;
     private EditManager mEditManager;
+    FloatingActionButton mFab;
+    boolean mAdjustFabLocation = false;
 
     private MenuItem mUndoButton;
     private MenuItem mRedoButton;
@@ -133,14 +139,14 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
             finish();
         }
 
-        FloatingActionButton fab = findViewById(R.id.save);
-        fab.setOnClickListener(new View.OnClickListener() {
+        mFab = findViewById(R.id.save);
+        mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mHandler.sendEmptyMessage(MSG_SAVE);
             }
         });
-        MoveableView.addMoveControl(fab);
+        MoveableView.addMoveControl(mFab);
 
         mEditText = findViewById(R.id.edit);
         refreshFontSize(SettingUtils.getFontSize(this));
@@ -152,6 +158,21 @@ public class EditActivity extends AppCompatActivity implements EditManager.EditR
         } else {
             mHandler.sendEmptyMessage(MSG_INIT);
         }
+
+        ScrollView scrollView = findViewById(R.id.edit_scroll);
+        scrollView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getActionMasked() == MotionEvent.ACTION_DOWN){
+                    mEditText.requestFocus();
+                    mEditText.setSelection(mEditText.getText().length());
+                    InputMethodManager im = getSystemService(InputMethodManager.class);
+                    im.showSoftInput(mEditText, 0);
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     @Override
